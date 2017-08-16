@@ -110,6 +110,9 @@ class SColor extends PluginBase implements Listener{
   }
 
   public function colorize(string $raw, CommandSender $sender = null){
+    if(strpos($raw, '§') === false && strpos($raw, '&') === false){
+      return $raw;
+    }
     $len = strlen($raw);
     $offset = 0;
     $ret = '';
