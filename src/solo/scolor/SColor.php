@@ -15,7 +15,7 @@ use pocketmine\utils\TextFormat;
 use solo\scolor\color\Color;
 use solo\scolor\style\Style;
 
-class SColor extends PluginBase implements Listener{
+class SColor extends PluginBase{
 
   private static $instance = null;
 
@@ -82,6 +82,7 @@ class SColor extends PluginBase implements Listener{
 
       /**
        * @priority LOW
+       *
        * @ignoreCancelled true
        */
       public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
@@ -94,6 +95,7 @@ class SColor extends PluginBase implements Listener{
 
       /**
        * @priority LOW
+       *
        * @ignoreCancelled true
        */
       public function handleSignChange(SignChangeEvent $event){
@@ -110,6 +112,7 @@ class SColor extends PluginBase implements Listener{
 
       /**
        * @priority LOW
+       *
        * @ignoreCancelled true
        */
       public function handleServerCommand(ServerCommandEvent $event){
