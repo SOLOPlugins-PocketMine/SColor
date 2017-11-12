@@ -19,9 +19,12 @@ class SColor extends PluginBase implements Listener{
 
   private static $instance = null;
 
-  public function getInstance(){
+  public static function getInstance(){
     return self::$instance;
   }
+
+  /** @var Config */
+  private $setting;
 
   /** @var Color[] */
   private $knownColors = [];
@@ -32,6 +35,7 @@ class SColor extends PluginBase implements Listener{
   /** @var Color|Style[] */
   private $list = [];
 
+  /** @var Color|Style[] */
   private $allowList = [];
 
   public function onLoad(){
@@ -45,9 +49,9 @@ class SColor extends PluginBase implements Listener{
     @mkdir($this->getDataFolder());
     $this->saveResource("setting.yml");
 
-    $this->config = new Config($this->getDataFolder() . "setting.yml", Config::YAML);
+    $this->setting = new Config($this->getDataFolder() . "setting.yml", Config::YAML);
 
-    foreach($this->config->get("allow-colors", []) as $code){
+    foreach($this->setting->get("allow-colors", []) as $code){
       $this->allowList[$code] = $code;
     }
 
@@ -81,7 +85,7 @@ class SColor extends PluginBase implements Listener{
        * @ignoreCancelled true
        */
       public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
-        if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-chat", true) === true){
+        if($event->getPlayer()->isOp() || $this->owner->getSetting()->get("allow-color-on-chat", true) === true){
           $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
         }else{
           $event->setMessage(TextFormat::clean($event->getMessage()));
@@ -93,9 +97,9 @@ class SColor extends PluginBase implements Listener{
        * @ignoreCancelled true
        */
       public function handleSignChange(SignChangeEvent $event){
-        if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-sign", true) === true){
+        if($event->getPlayer()->isOp() || $this->owner->getSetting()->get("allow-color-on-sign", true) === true){
           for($i = 0; $i < 4; $i++){
-            $event->setLine($i, $this->colorize($event->getLine($i), $event->getPlayer()));
+            $event->setLine($i, $this->owner->colorize($event->getLine($i), $event->getPlayer()));
           }
         }else{
           for($i = 0; $i < 4; $i++){
@@ -109,8 +113,7 @@ class SColor extends PluginBase implements Listener{
        * @ignoreCancelled true
        */
       public function handleServerCommand(ServerCommandEvent $event){
-        $colorized = $this->colorize($event->getCommand());
-        $event->setCommand($colorized);
+        $event->setCommand($this->owner->colorize($event->getCommand()));
       }
     }, $this);
   }
@@ -119,27 +122,33 @@ class SColor extends PluginBase implements Listener{
     self::$instance = null;
   }
 
-  public function registerColor(Color $color){
+  public function getSetting() : Config{
+    return $this->setting;
+  }
+
+  public function registerColor(Color $color) : bool{
     if(!isset($this->allowList[$color->getCode()])){
-      return;
+      return false;
     }
     $this->knownColors[$color->getCode()] = $color;
     $this->list[$color->getCode()] = $color;
+    return true;
   }
 
-  public function registerStyle(Style $style){
+  public function registerStyle(Style $style) : bool{
     if(!isset($this->allowList[$style->getCode()])){
-      return;
+      return false;
     }
     $this->knownStyles[$style->getCode()] = $style;
     $this->list[$style->getCode()] = $style;
+    return true;
   }
 
-  public function getRegisteredColors(){
+  public function getRegisteredColors() : array{
     return $this->knownColors;
   }
 
-  public function getRegisteredStyles(){
+  public function getRegisteredStyles() : array{
     return $this->knownStyles;
   }
 
