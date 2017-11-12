@@ -51,12 +51,68 @@ class SColor extends PluginBase implements Listener{
       $this->allowList[$code] = $code;
     }
 
-    $this->registerColors();
-    $this->registerStyles();
+    foreach([
+      "Black", "DarkBlue", "DarkGreen", "DarkAqua", "DarkRed", "DarkPurple",
+      "Gold", "Gray", "DarkGray", "Blue", "Green", "Aqua", "Red", "LightPurple",
+      "Yellow", "White"
+    ] as $color){
+      $class = "\\solo\\scolor\\color\\" . $color;
+      $colorInstance = new $class();
+      $this->registerColor($colorInstance);
+    }
+
+    foreach([
+      "Bold", "Italic", "Obfuscated", "Reset"
+    ] as $style){
+      $class = "\\solo\\scolor\\style\\" . $style;
+      $styleInstance = new $class();
+      $this->registerStyle($styleInstance);
+    }
 
     $this->getServer()->getCommandMap()->register("scolor", new \solo\scolor\command\ColorCommand($this));
 
-    $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    $this->getServer()->getPluginManager()->registerEvents(new class($this) implements Listener{
+      public function __construct(SColor $owner){
+        $this->owner = $owner;
+      }
+
+      /**
+       * @priority LOW
+       * @ignoreCancelled true
+       */
+      public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
+        if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-chat", true) === true){
+          $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
+        }else{
+          $event->setMessage(TextFormat::clean($event->getMessage()));
+        }
+      }
+
+      /**
+       * @priority LOW
+       * @ignoreCancelled true
+       */
+      public function handleSignChange(SignChangeEvent $event){
+        if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-sign", true) === true){
+          for($i = 0; $i < 4; $i++){
+            $event->setLine($i, $this->colorize($event->getLine($i), $event->getPlayer()));
+          }
+        }else{
+          for($i = 0; $i < 4; $i++){
+            $event->setLine($i, TextFormat::clean($event->getLine($i)));
+          }
+        }
+      }
+
+      /**
+       * @priority LOW
+       * @ignoreCancelled true
+       */
+      public function handleServerCommand(ServerCommandEvent $event){
+        $colorized = $this->colorize($event->getCommand());
+        $event->setCommand($colorized);
+      }
+    }, $this);
   }
 
   public function onDisable(){
@@ -87,29 +143,7 @@ class SColor extends PluginBase implements Listener{
     return $this->knownStyles;
   }
 
-  private function registerColors(){
-    foreach([
-      "Black", "DarkBlue", "DarkGreen", "DarkAqua", "DarkRed", "DarkPurple",
-      "Gold", "Gray", "DarkGray", "Blue", "Green", "Aqua", "Red", "LightPurple",
-      "Yellow", "White"
-    ] as $color){
-      $class = "\\solo\\scolor\\color\\" . $color;
-      $colorInstance = new $class();
-      $this->registerColor($colorInstance);
-    }
-  }
-
-  private function registerStyles(){
-    foreach([
-      "Bold", "Italic", "Obfuscated", "Reset"
-    ] as $style){
-      $class = "\\solo\\scolor\\style\\" . $style;
-      $styleInstance = new $class();
-      $this->registerStyle($styleInstance);
-    }
-  }
-
-  public function colorize(string $raw, CommandSender $sender = null){
+  public function colorize(string $raw, CommandSender $sender = null) : string{
     if(strpos($raw, '§') === false && strpos($raw, '&') === false){
       return $raw;
     }
@@ -155,45 +189,5 @@ class SColor extends PluginBase implements Listener{
       $offset++;
     }
     return $ret;
-  }
-
-  /**
-   * @priority LOW
-   *
-   * @ignoreCancelled true
-   */
-  public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
-    if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-chat")){
-      $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
-    }else{
-      $event->setMessage(TextFormat::clean($event->getMessage()));
-    }
-  }
-
-  /**
-   * @priority LOW
-   *
-   * @ignoreCancelled true
-   */
-  public function handleSignChange(SignChangeEvent $event){
-    if($event->getPlayer()->isOp() || $this->config->get("allow-color-on-sign")){
-      for($i = 0; $i < 4; $i++){
-        $event->setLine($i, $this->colorize($event->getLine($i), $event->getPlayer()));
-      }
-    }else{
-      for($i = 0; $i < 4; $i++){
-        $event->setLine($i, TextFormat::clean($event->getLine($i)));
-      }
-    }
-  }
-
-  /**
-   * @priority LOW
-   *
-   * @ignoreCancelled true
-   */
-  public function handleServerCommand(ServerCommandEvent $event){
-    $colorized = $this->colorize($event->getCommand());
-    $event->setCommand($colorized);
   }
 }
