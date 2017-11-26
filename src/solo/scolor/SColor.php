@@ -86,7 +86,7 @@ class SColor extends PluginBase{
        * @ignoreCancelled true
        */
       public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
-        if($event->getPlayer()->isOp() || $this->owner->getSetting()->get("allow-color-on-chat", true) === true){
+        if($event->getPlayer()->isOp() or $this->owner->getSetting()->get("allow-color-on-chat", true) === true){
           $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
         }else{
           $event->setMessage(TextFormat::clean($event->getMessage()));
@@ -99,7 +99,7 @@ class SColor extends PluginBase{
        * @ignoreCancelled true
        */
       public function handleSignChange(SignChangeEvent $event){
-        if($event->getPlayer()->isOp() || $this->owner->getSetting()->get("allow-color-on-sign", true) === true){
+        if($event->getPlayer()->isOp() or $this->owner->getSetting()->get("allow-color-on-sign", true) === true){
           for($i = 0; $i < 4; $i++){
             $event->setLine($i, $this->owner->colorize($event->getLine($i), $event->getPlayer()));
           }
@@ -156,23 +156,21 @@ class SColor extends PluginBase{
   }
 
   public function colorize(string $raw, CommandSender $sender = null) : string{
-    if(strpos($raw, '§') === false && strpos($raw, '&') === false){
+    if(strpos($raw, '§') === false and strpos($raw, '&') === false){
       return $raw;
     }
     $len = strlen($raw);
     $offset = 0;
     $ret = '';
     while($offset < $len){
-      //$token = mb_substr($raw, $offset, $offset + 1);
       $token = $raw{$offset};
-      if($token == '&' || $token == '§'){
+      if($token == '&' or $token == '§'){
         $offset++;
         if($offset < $len){
-          //$token = mb_substr($raw, $offset, $offset + 1);
           $code = $raw{$offset};
           $color = $this->list[$code] ?? null;
           if($color !== null){
-            if($sender !== null && !$sender->hasPermission($color->getPermission())){
+            if($sender !== null and !$sender->hasPermission($color->getPermission())){
               // Can't use the color
               if($token == '&'){
                 $ret .= '&';
