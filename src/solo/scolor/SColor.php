@@ -15,7 +15,7 @@ use pocketmine\utils\TextFormat;
 use solo\scolor\color\Color;
 use solo\scolor\style\Style;
 
-class SColor extends PluginBase{
+class SColor extends PluginBase implements Listener{
 
   private static $instance = null;
 
@@ -75,50 +75,7 @@ class SColor extends PluginBase{
 
     $this->getServer()->getCommandMap()->register("scolor", new \solo\scolor\command\ColorCommand($this));
 
-    $this->getServer()->getPluginManager()->registerEvents(new class($this) implements Listener{
-      public function __construct(SColor $owner){
-        $this->owner = $owner;
-      }
-
-      /**
-       * @priority LOW
-       *
-       * @ignoreCancelled true
-       */
-      public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
-        if($event->getPlayer()->isOp() or $this->owner->getSetting()->get("allow-color-on-chat", true) === true){
-          $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
-        }else{
-          $event->setMessage(TextFormat::clean($event->getMessage()));
-        }
-      }
-
-      /**
-       * @priority LOW
-       *
-       * @ignoreCancelled true
-       */
-      public function handleSignChange(SignChangeEvent $event){
-        if($event->getPlayer()->isOp() or $this->owner->getSetting()->get("allow-color-on-sign", true) === true){
-          for($i = 0; $i < 4; $i++){
-            $event->setLine($i, $this->owner->colorize($event->getLine($i), $event->getPlayer()));
-          }
-        }else{
-          for($i = 0; $i < 4; $i++){
-            $event->setLine($i, TextFormat::clean($event->getLine($i)));
-          }
-        }
-      }
-
-      /**
-       * @priority LOW
-       *
-       * @ignoreCancelled true
-       */
-      public function handleServerCommand(ServerCommandEvent $event){
-        $event->setCommand($this->owner->colorize($event->getCommand()));
-      }
-    }, $this);
+    $this->getServer()->getPluginManager()->registerEvents($this, $this);
   }
 
   public function onDisable(){
@@ -153,6 +110,45 @@ class SColor extends PluginBase{
 
   public function getRegisteredStyles() : array{
     return $this->knownStyles;
+  }
+
+  /**
+   * @priority LOW
+   *
+   * @ignoreCancelled true
+   */
+  public function handlePlayerCommandPreprocess(PlayerCommandPreprocessEvent $event){
+    if($event->getPlayer()->isOp() or $this->setting->get("allow-color-on-chat", true) === true){
+      $event->setMessage($this->colorize($event->getMessage(), $event->getPlayer()));
+    }else{
+      $event->setMessage(TextFormat::clean($event->getMessage()));
+    }
+  }
+
+  /**
+   * @priority LOW
+   *
+   * @ignoreCancelled true
+   */
+  public function handleSignChange(SignChangeEvent $event){
+    if($event->getPlayer()->isOp() or $this->setting->get("allow-color-on-sign", true) === true){
+      for($i = 0; $i < 4; $i++){
+        $event->setLine($i, $this->colorize($event->getLine($i), $event->getPlayer()));
+      }
+    }else{
+      for($i = 0; $i < 4; $i++){
+        $event->setLine($i, TextFormat::clean($event->getLine($i)));
+      }
+    }
+  }
+
+  /**
+   * @priority LOW
+   *
+   * @ignoreCancelled true
+   */
+  public function handleServerCommand(ServerCommandEvent $event){
+    $event->setCommand($this->colorize($event->getCommand()));
   }
 
   public function colorize(string $raw, CommandSender $sender = null) : string{
