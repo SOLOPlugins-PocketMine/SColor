@@ -2,12 +2,12 @@
 
 namespace solo\scolor\command;
 
+use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 
 use solo\scolor\SColor;
-use solo\scolor\SColorCommand;
 
-class ColorCommand extends SColorCommand{
+class ColorCommand extends Command{
 
   private $owner;
 
@@ -18,7 +18,7 @@ class ColorCommand extends SColorCommand{
     $this->owner = $owner;
   }
 
-  public function _execute(CommandSender $sender, string $label, array $args) : bool{
+  public function execute(CommandSender $sender, string $label, array $args) : bool{
     $sender->sendMessage("§l==========[ 사용 가능한 색 목록 ]==========");
 
     $availableColors = array_filter($this->owner->getRegisteredColors(), function($color) use ($sender){ return $sender->hasPermission($color->getPermission()); });
